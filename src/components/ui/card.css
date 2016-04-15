@@ -1,0 +1,10 @@
+.card {
+    -webkit-box-pack: center;
+    -moz-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}

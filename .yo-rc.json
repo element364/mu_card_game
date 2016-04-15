@@ -1,0 +1,7 @@
+{
+  "generator-react-webpack": {
+    "appName": "mucardGame",
+    "style": "css",
+    "postcss": false
+  }
+}
