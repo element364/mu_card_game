@@ -1,0 +1,28 @@
+.card {
+    display: inline-block;
+    height: 185px;
+    width: 132px;
+    float: left;
+    
+    
+    margin-left: 5px;
+    margin-right: 5px;
+    
+    background-image: linear-gradient(to bottom right, #3acfd5 0%, #3a4ed5 100%);
+    
+    &:hover {
+        transform: scale(1.05);
+    }
+    
+    &.shadow {
+        box-shadow: 0 0 10px rgba(0,0,0,0.75);
+        transform: scale(1.1);
+    }
+}
+
+.card span {
+    display:table-cell;
+    vertical-align:middle;
+    height: 100%;
+    width: 100px;
+}
