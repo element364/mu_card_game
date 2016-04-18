@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes as pt } from 'react';
 import classNames from 'classnames';
 
 import './card.less'
@@ -6,36 +6,33 @@ import './card.less'
 class Card extends Component {
     constructor(props) {
         super(props);
-        
-        this.state = {
-            selected: false
-        };
-        
-        this.clickHandler = this.clickHandler.bind(this)
-    }
-    
-    clickHandler() {
-        this.setState({
-            selected: !this.state.selected
-        })
     }
     
     render() {
-        const cardStyle = {
-            //backgroundColor: this.props.suit
-        };
+        const cardClassNames = classNames({
+            card: true,
+            shadow: this.props.selected,
+            [this.props.suit]: true
+        });
         
-        console.log('card');
         return (
             <div
-                className={classNames({ card: true, shadow: this.state.selected })}
-                style={cardStyle}
-                onClick={this.clickHandler}
+                className={cardClassNames}
+                onClick={this.props.onClick.bind(this, this.props.suit, this.props.rank)}
             >
+                <div className="topPlaceholder"></div>
                 <span>{this.props.rank}</span>
             </div>
         );
     }
+}
+
+Card.propsTypes = {
+    onClick: pt.func
+};
+
+Card.defaultProps = {
+    onClick: () => {}
 }
 
 export default Card;
