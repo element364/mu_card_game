@@ -9,10 +9,12 @@ class Card extends Component {
     }
     
     render() {
+        const suitClass = this.props.closed ? 'closed' : this.props.suit;
+        
         const cardClassNames = classNames({
             card: true,
             shadow: this.props.selected,
-            [this.props.suit]: true
+            [suitClass]: true
         });
         
         return (
@@ -21,17 +23,21 @@ class Card extends Component {
                 onClick={this.props.onClick.bind(this, this.props.suit, this.props.rank)}
             >
                 <div className="topPlaceholder"></div>
-                <span>{this.props.rank}</span>
+                <span>{this.props.closed ? '?' : this.props.rank}</span>
             </div>
         );
     }
 }
 
 Card.propsTypes = {
+    closed: pt.bool,
+    
     onClick: pt.func
 };
 
 Card.defaultProps = {
+    closed: false,
+    
     onClick: () => {}
 }
 

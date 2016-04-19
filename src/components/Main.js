@@ -3,6 +3,7 @@ require('normalize.css');
 
 import React from 'react';
 import { Button, Panel } from 'react-bootstrap';
+import Toggle from 'react-toggle'; 
 import { shuffle, filter, find, sortBy } from 'lodash';
 
 import Card from './ui/card/Card.jsx';
@@ -42,12 +43,13 @@ class AppComponent extends React.Component {
     constructor(props) {
         super(props);
         
-        this.state = this.getNewGameState();
+        this.state = Object.assign({},  this.getNewGameState(), { cheater: false });
       
         this.cardClickHandler = this.cardClickHandler.bind(this);
         this.changeButtonClickHandler = this.changeButtonClickHandler.bind(this);
         this.realeseButtonClickHanler = this.realeseButtonClickHanler.bind(this);
         this.endGameButtonClickHandler = this.endGameButtonClickHandler.bind(this);
+        this.handleCheaterChange = this.handleCheaterChange.bind(this);
     }
   
   getNewGameState() {
@@ -175,6 +177,10 @@ class AppComponent extends React.Component {
       this.setState(this.getNewGameState());
   }
   
+  handleCheaterChange(e) {
+    this.setState({ cheater: e.target.checked }); 
+  }
+  
   render() {
     const selectedCards = this.getSelectedCards(),
         score = this.getCardsScore(selectedCards);
@@ -183,15 +189,21 @@ class AppComponent extends React.Component {
       <div className="container-fluid">
         <div className="row">
             <Panel header={`Deck, ${this.state.deck.length} left`} style={{ minHeight: 393 }}>
-                {this.state.deck.map(c => <Card suit={c.suit} rank={c.rank} />)}
+                {this.state.deck.map(c => <Card suit={c.suit} rank={c.rank} closed={!this.state.cheater} />)}
             </Panel>
         </div>
         <div className="row">
             <div className="col-sm-3 col-md-2 sidebar">
-                <Button onClick={this.changeButtonClickHandler} bsSize="large block" bsStyle="warning">Change</Button>
+                <Button onClick={this.changeButtonClickHandler} disabled={selectedCards.length === 0} bsSize="large block" bsStyle="warning">Change</Button>
                 <Button onClick={this.realeseButtonClickHanler} disabled={score === 0} bsSize="large block" bsStyle="success">Release {score > 0 && score}</Button>
                 <h3>Score: {this.state.totalScore}</h3>
                 <Button onClick={this.endGameButtonClickHandler} bsSize="large" bsStyle="primary">End game</Button>
+                <label>
+                    <Toggle
+                        defaultChecked={this.state.cheater}
+                        onChange={this.handleCheaterChange} />
+                    <span className="label-text">Wrapper label tag</span>
+                </label>
             </div>
             <div className="col-sm-5 cold-md-5">
                 {this.state.cards.map(c => <Card rank={c.rank} suit={c.suit} selected={c.selected} onClick={this.cardClickHandler} />)}
