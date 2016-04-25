@@ -8,11 +8,14 @@
  */
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
+import multireducer from 'multireducer';
 import { cardGameReducer } from './cardGameReducer';
 /* Populated by react-webpack-redux:reducer */
 const reducers = {
     routing: routerReducer,
-    human_game: cardGameReducer,
-    ai_game: cardGameReducer
+    games: multireducer({
+        human_game: cardGameReducer,
+        ai_game: cardGameReducer
+    })
 };
 module.exports = combineReducers(reducers);

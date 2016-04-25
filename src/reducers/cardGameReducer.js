@@ -79,31 +79,40 @@ const getCardsScore = selectedCards => {
 
 export { getCardsScore }
 
+const getNewGameState = () => {
+    var deck = generateDeck(),
+        cards = [];
+    
+    for (let i = 0; i < 5; i++) {
+        cards.push( deck.shift() );
+    }
+        
+    return {
+        deck,
+        cards,
+        deadCards: [],
+        
+        totalScore: 0
+    };
+}
+
 const initialCardGameState = {
-      deck: [],
-      cards: [],
-      deadCards: [],
-      
-      totalScore: 0
+    deck: [],
+    cards: [],
+    deadCards: [],
+
+    totalScore: 0
 };
 
-const cardGameReducer = (state = initialCardGameState, action) => {
+const cardGameReducer = (state = initialCardGameState, action = {}) => {
     switch (action.type) {
         case actionTypes.NEW_GAME:
-            var deck = generateDeck(),
-                cards = [];
-            
-            for (let i = 0; i < 5; i++) {
-                cards.push( deck.shift() );
-            }
-                
-            return {
-                deck,
-                cards,
-                deadCards: [],
-                
-                totalScore: 0
-            };
+            console.log('actionTypes.NEW_GAME');
+            return getNewGameState();
+        case actionTypes.END_GAME:
+            console.log('actionTypes.END_GAME');
+            alert(`Score: ${state.totalScore}`);
+            return getNewGameState();
         case actionTypes.SELECT_CARDS:
             return {
                 ...state,
@@ -115,6 +124,7 @@ const cardGameReducer = (state = initialCardGameState, action) => {
                 })
             };
         case actionTypes.CHANGE_CARDS:
+            console.log('actionTypes.CHANGE_CARDS');
             var deck = [...state.deck],
                 cards = [...state.cards];
                 
