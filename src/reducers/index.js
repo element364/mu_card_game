@@ -7,6 +7,12 @@
  *          you edit them, they are not updated again.
  */
 import { combineReducers } from 'redux';
+import { routerReducer } from 'react-router-redux';
+import { cardGameReducer } from './cardGameReducer';
 /* Populated by react-webpack-redux:reducer */
-const reducers = {};
+const reducers = {
+    routing: routerReducer,
+    human_game: cardGameReducer,
+    ai_game: cardGameReducer
+};
 module.exports = combineReducers(reducers);

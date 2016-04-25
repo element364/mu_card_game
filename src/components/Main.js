@@ -1,49 +1,25 @@
 require('normalize.css');
 //require('styles/App.css');
+require('react-bootstrap-toggle/lib/bootstrap2-toggle.css');
 
 import React from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
 import { Button, Panel } from 'react-bootstrap';
-import Toggle from 'react-toggle'; 
-import { shuffle, filter, find, sortBy } from 'lodash';
-
+import ReactBootstrapToggle from 'react-bootstrap-toggle';
+import { Link } from 'react-router';
+import { filter } from 'lodash';
+import { getCardsScore } from '../reducers/cardGameReducer';
+import * as gameActions from '../actions/gameActions';
 import Card from './ui/card/Card.jsx';
-
-let yeomanImage = require('../images/yeoman.png');
-
-const generateDeck = () => {
-    let result = [];
-  
-    for (let suit = 0; suit < 3; suit++) {
-        for (let rank = 1; rank <= 8; rank++) {
-            let suitColor = '';
-            switch (suit) {
-                case 0:
-                    suitColor = 'red';
-                    break;
-                case 1:
-                    suitColor = 'blue';
-                    break;
-                case 2:
-                    suitColor = 'yellow';
-                    break;
-            }
-          
-            result.push({
-              suit: suitColor,
-              selected: false,
-              rank
-            });
-        }
-    }
-    
-    return shuffle(result);
-};
 
 class AppComponent extends React.Component {
     constructor(props) {
         super(props);
         
-        this.state = Object.assign({},  this.getNewGameState(), { cheater: false });
+        this.state = Object.assign({}, { cheater: false });
+        
+        this.props.gameActions.startNewGame();
       
         this.cardClickHandler = this.cardClickHandler.bind(this);
         this.changeButtonClickHandler = this.changeButtonClickHandler.bind(this);
@@ -52,170 +28,70 @@ class AppComponent extends React.Component {
         this.handleCheaterChange = this.handleCheaterChange.bind(this);
     }
   
-  getNewGameState() {
-      const deck = generateDeck(),
-        cards = [];
-      
-      for (let i = 0; i < 5; i++) {
-         cards.push( deck.shift() );
-      }
-        
-      return {
-          deck,
-          cards,
-          deadCards: [],
-          
-          totalScore: 0
-      };
-  }
+    cardClickHandler(suit, rank) {
+        this.props.gameActions.selectCards([{ suit, rank }]);
+    }
   
-  cardClickHandler(suit, rank) {
-      let card = find(this.state.cards, { suit, rank })
-      card.selected = !card.selected;
-
-      this.setState({ cards: this.state.cards });
-  }
-  
-  getSelectedCards() {
-      const { cards } = this.state;
+  getSelectedCards(cards = this.state.cards) {
       return filter(cards, { selected: true });
   }
   
   changeButtonClickHandler() {
-      const { cards, deck, deadCards } = this.state;
-      const selectedCards = this.getSelectedCards();
+      const { cards } = this.props.game;
+      const selectedCards = this.getSelectedCards(cards);
       
-      const newCards = [];
-      
-      for (let i = 0; i < selectedCards.length; i++) {
-        if (deck.length > 0) {
-            newCards.push(deck.pop());
-        }
-      }
-      
-      this.setState({
-          deck,
-          cards: filter(cards, { selected: false }).concat(newCards),
-          deadCards: deadCards.concat(selectedCards)
-      });
+      this.props.gameActions.changeCards(selectedCards);
   }
   
   realeseButtonClickHanler() {
-    const selectedCards = this.getSelectedCards(),
-        score = this.getCardsScore(selectedCards);
-        
-    if (score > 0) {
-        let { deck, cards, deadCards, totalScore } = this.state;
-        totalScore += score;
-        
-        const newCards = [];
-        
-        for (let i = 0; i < selectedCards.length; i++) {
-            if (deck.length > 0) {
-                newCards.push(deck.pop());
-            }
-        }
-        
-        this.setState({
-            deck,
-            cards: filter(cards, { selected: false }).concat(newCards),
-            deadCards: deadCards.concat(selectedCards),
-            totalScore
-        });
+    const selectedCards = this.getSelectedCards(this.props.game.cards);
+    
+    this.props.gameActions.releaseCards(selectedCards);
+  }
+
+    endGameButtonClickHandler() {
+        alert(`Вы набрали ${this.props.game.totalScore} очков`);
+
+        this.props.gameActions.startNewGame();
     }
-  }
   
-  getCardsScore(selectedCards) {
-      if (selectedCards.length !== 3) {
-          return 0;
-      }
-      
-      const sortedCards = sortBy(selectedCards, card => card.rank);
-      
-      // Street
-      if (sortedCards[1].rank === sortedCards[0].rank + 1
-        && sortedCards[2].rank === sortedCards[1].rank + 1) {
-            // Street Flush
-            if (sortedCards[0].suit === sortedCards[1].suit
-                && sortedCards[1].suit === sortedCards[2].suit) {
-                return (sortedCards[2].rank + 2) * 10;
-                /* [1, 2, 3] => 50
-                   [2, 3, 4] => 60
-                   ...
-                   [6, 7, 8] => 100
-                */
-                
-            } else {
-                return sortedCards[0].rank * 10;
-                /*
-                   [1, 2, 3] => 10
-                   [2, 3, 4] => 20
-                   ...
-                   [6, 7, 8] => 60
-                */
-            }
-        }
-        
-        // Set
-        if (sortedCards[0].rank === sortedCards[1].rank
-            && sortedCards[1].rank === sortedCards[2].rank) {
-            return (sortedCards[2].rank + 1) * 10;
-            /*
-               [1, 1, 1] => 20
-               [2, 2, 2] => 30
-               ...
-               [8, 8, 8] => 90
-            */
-        }
-        
-        return 0;
-  }
-  
-  endGameButtonClickHandler() {
-      alert(`Вы набрали ${this.state.totalScore} очков`);
-      
-      this.setState(this.getNewGameState());
-  }
-  
-  handleCheaterChange(e) {
-    this.setState({ cheater: e.target.checked }); 
-  }
-  
+    handleCheaterChange(cheater) {
+        this.setState({ cheater });
+    }
+    
   render() {
-    const selectedCards = this.getSelectedCards(),
-        score = this.getCardsScore(selectedCards);
+    const selectedCards = this.getSelectedCards(this.props.game.cards),
+        score = getCardsScore(selectedCards);
       
     return (
       <div className="container-fluid">
+        <Link to="/ai_prog">AI</Link>
         <div className="row">
-            <Panel header={`Deck, ${this.state.deck.length} left`} style={{ minHeight: 393 }}>
-                {this.state.deck.map(c => <Card suit={c.suit} rank={c.rank} closed={!this.state.cheater} />)}
+            <Panel header={`Deck, ${this.props.game.deck.length} left`} style={{ minHeight: 393 }}>
+                {this.props.game.deck.map(c => <Card suit={c.suit} rank={c.rank} closed={!this.state.cheater} key={`card-${c.suit}${c.rank}`} />)}
             </Panel>
         </div>
         <div className="row">
-            <div className="col-sm-3 col-md-2 sidebar">
-                <Button onClick={this.changeButtonClickHandler} disabled={selectedCards.length === 0} bsSize="large block" bsStyle="warning">Change</Button>
-                <Button onClick={this.realeseButtonClickHanler} disabled={score === 0} bsSize="large block" bsStyle="success">Release {score > 0 && score}</Button>
-                <h3>Score: {this.state.totalScore}</h3>
+            <div className="col-sm-6 col-md-6 sidebar">
+                <Button onClick={this.changeButtonClickHandler} disabled={selectedCards.length === 0} bsSize="large" bsStyle="warning">Change</Button>
+                <Button onClick={this.realeseButtonClickHanler} disabled={score === 0} bsSize="large" bsStyle="success">Release {score > 0 && score}</Button>
+                <h3>Score: {this.props.game.totalScore}</h3>
                 <Button onClick={this.endGameButtonClickHandler} bsSize="large" bsStyle="primary">End game</Button>
-                <label>
-                    <Toggle
-                        defaultChecked={this.state.cheater}
-                        onChange={this.handleCheaterChange} />
-                    <span className="label-text">Wrapper label tag</span>
-                </label>
+                <div className="checkbox">
+                    <label>
+                        Cheater
+                        <ReactBootstrapToggle active={false} onChange={this.handleCheaterChange} />
+                    </label>
+                </div>
             </div>
-            <div className="col-sm-5 cold-md-5">
-                {this.state.cards.map(c => <Card rank={c.rank} suit={c.suit} selected={c.selected} onClick={this.cardClickHandler} />)}
+            <div className="col-sm-6 cold-md-6">
+                {this.props.game.cards.map(c => <Card rank={c.rank} suit={c.suit} selected={c.selected} onClick={this.cardClickHandler} key={`card-${c.suit}${c.rank}`} />)}
             </div>
         </div>
         <div className="row">
             <Panel header="Dead cards" style={{ height: 233 }}>
-                {this.state.deadCards.map(c => <Card rank={c.rank} suit={c.suit} />)}
+                {this.props.game.deadCards.map(c => <Card rank={c.rank} suit={c.suit} key={`card-${c.suit}${c.rank}`} />)}
             </Panel>
-        </div>
-        <div className="row">
-            <img src={yeomanImage} alt="Yeoman Generator" />
         </div>
       </div>
     );
@@ -225,4 +101,16 @@ class AppComponent extends React.Component {
 AppComponent.defaultProps = {
 };
 
-export default AppComponent;
+const mapStateToProps = state => {
+    return {
+        game: state.human_game
+    };
+};
+
+const mapDispatchToProps = dispatch => {
+    return {
+        gameActions: bindActionCreators(gameActions, dispatch)
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AppComponent);
