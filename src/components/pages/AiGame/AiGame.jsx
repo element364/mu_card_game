@@ -163,6 +163,8 @@ class AiGame extends Component {
         return (
             <div className="container-fluid">
                 <Link to="/">Main</Link>
+                &nbsp;
+                <Link to="/ai_comp">AI Competition</Link>
                 <div className="row">
                     <Panel header={`Deck, ${this.props.game.deck.length} left`} style={{ minHeight: 393 }}>
                         {this.props.game.deck.map(c => <Card suit={c.suit} rank={c.rank} closed={!this.state.cheater} key={`card-${c.suit}${c.rank}`} />)}

@@ -6,6 +6,7 @@ import { Router, Route, hashHistory } from 'react-router';
 import configureStore from './stores';
 import HumanGameWrapper from './components/pages/HumanGameWrapper/HumanGameWrapper.jsx';
 import AiGameWrapper from './components/pages/AiGameWrapper/AiGameWrapper.jsx';
+import AiCompetitionWrapper from './components/pages/AiCompetitionWrapper/AiCompetitionWrapper.jsx';
 
 const store = configureStore();
 
@@ -16,6 +17,7 @@ render(
     <Provider store={store}>
         <Router history={history}>
             <Route path="/ai_prog" component={AiGameWrapper} />
+            <Route path="/ai_comp" component={AiCompetitionWrapper} />
             <Route path="/" component={HumanGameWrapper} />
         </Router>
     </Provider>,
