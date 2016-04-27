@@ -6,6 +6,8 @@ require('codemirror/lib/codemirror.css');
 require('codemirror/theme/material.css');
 require('codemirror/mode/javascript/javascript');
 
+require('./ai-tab.less');
+
 class AiTab extends Component {    
     constructor(props) {
         super(props)
@@ -23,6 +25,7 @@ class AiTab extends Component {
                 mode: 'javascript'
             }
         );
+        this.codeMirror.on('change', cm => this.props.onCodeChange(this.props.index, cm.getValue()));
     }
     
     onCloseHandler() {
@@ -35,7 +38,7 @@ class AiTab extends Component {
     
     render() {
         return (
-            <div>
+            <div className="container ai-tab">
                 <div className="row">
                     <div className="col-sm-10 col-md-10">
                         <Input type="text" onChange={this.handleStrategyNameChange} value={this.props.strategyName} />
@@ -45,7 +48,7 @@ class AiTab extends Component {
                     </div>
                 </div>
                 <div className="row">
-                    <textarea id={`cmEditor_${this.props.index}`} rows="3" value="" />
+                    <textarea id={`cmEditor_${this.props.index}`} rows="3" value={this.props.code} />
                 </div>
             </div>
         );
@@ -54,12 +57,14 @@ class AiTab extends Component {
 
 AiTab.propTypes = {
     onClose: PropTypes.func,
-    onStrategyNameChange: PropTypes.func
+    onStrategyNameChange: PropTypes.func,
+    onCodeChange: PropTypes.func
 };
 
 AiTab.defaultProps = {
     onClose: () => {},
-    onStrategyNameChange: () => {}
+    onStrategyNameChange: () => {},
+    onCodeChange: () => {}
 };
 
 export default AiTab;

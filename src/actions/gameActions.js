@@ -2,8 +2,7 @@ import { actionTypes } from './actionTypes';
 
 const startNewGame = () => {
     return {
-        type: actionTypes.NEW_GAME,
-        payload: {}
+        type: actionTypes.NEW_GAME
     };
 };
 
