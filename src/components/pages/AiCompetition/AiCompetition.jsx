@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
-import { Button, Tab, Tabs, Panel, Input } from 'react-bootstrap';
+import { Button, Tab, Tabs, Panel, Input, Table } from 'react-bootstrap';
 import { Link } from 'react-router';
+import ChartistGraph from 'react-chartist';
 import AiTab from '../../ui/aiTab/AiTab.jsx';
 import { generateDeck, cardGameReducer } from '../../../reducers/cardGameReducer';
 import { actionTypes } from '../../../actions/actionTypes';
 import { antiGreedStrategy } from '../../../utils/strategies';
+
+require('chartist/dist/chartist.min.css');
 
 class AiCompetition extends Component {
     constructor(props) {
@@ -23,7 +26,9 @@ class AiCompetition extends Component {
             tabs: defaultTabs,
             
             iterations: 1000,
-            iterating: false
+            iterating: false,
+            
+            competitionResults: []
         };
         
         this.tabs_counter = 1;
@@ -34,7 +39,8 @@ class AiCompetition extends Component {
         this.onStrategyNameChangeTab = this.onStrategyNameChangeTab.bind(this);
         this.handleIterationsChange = this.handleIterationsChange.bind(this);
         this.onIterateBtnClick = this.onIterateBtnClick.bind(this);
-        this.onTabCodeChange = this.onTabCodeChange.bind(this); 
+        this.onTabCodeChange = this.onTabCodeChange.bind(this);
+        this.runIteration = this.runIteration.bind(this);
     }
     
     handleTabSelect(selectedTabKey) {
@@ -94,6 +100,12 @@ class AiCompetition extends Component {
         const deck = generateDeck();
         console.log(deck.map(card => `${card.suit}${card.rank}`).join(', '));
         
+        let newCompRes = {
+            iteration: this.state.competitionResults.length + 1,
+            deck,
+            scores: [] 
+        };
+        
         this.state.tabs.forEach(tab => {
             var gameState = cardGameReducer(null, {
                 type: actionTypes.NEW_GAME,
@@ -102,9 +114,10 @@ class AiCompetition extends Component {
                 
             const code = tab.code;
             eval.call(null, code);
-            
+
             while (true) {
                 var executionResult = makeMove([...gameState.cards], [...gameState.deadCards]);
+
                 if (executionResult.type === actionTypes.END_GAME) {
                     break;
                 } else {
@@ -113,24 +126,68 @@ class AiCompetition extends Component {
             }
             
             console.log(`${tab.strategyName} - ${gameState.totalScore}`);
+            
+            newCompRes.scores.push({
+                strategyName: tab.strategyName,
+                score: gameState.totalScore
+            });
+        });
+        
+        this.setState({
+            competitionResults: this.state.competitionResults.concat(newCompRes)
         });
         
         if (this.state.iterating) {
-            setTimeout(() => {
-                this.runIteration();
-            }, 500);
+            if (this.state.competitionResults.length < this.state.iterations) {
+                setTimeout(() => {
+                    this.runIteration();
+                }, 500);
+            } else {
+                    this.setState({
+                        iterating: false
+                    });
+            }
         }
     }
     
     onIterateBtnClick() {
-        this.setState({ iterating: !this.state.iterating }, () => {
+        var nextstate;
+        if (this.state.iterating) {
+            nextstate = {
+                competitionResults: []
+            };
+        }
+        
+        this.setState({
+            ...nextstate,
+            iterating: !this.state.iterating
+        }, () => {
             if (this.state.iterating) {
-                this.runIteration();
+                    this.runIteration();
             }
         });
     }
     
     render() {
+var data = {
+labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'],
+series: [
+[1, 2, 4, 8, 6, -2, -1, -4, -6, -2]
+]
+};
+
+var options = {
+high: 10,
+low: -10,
+axisX: {
+labelInterpolationFnc: function(value, index) {
+return index % 2 === 0 ? value : null;
+}
+}
+};
+
+var type = 'Bar'
+        
         return (
             <div className="container-fluid">
                 <Link to="/">Main</Link>
@@ -152,6 +209,31 @@ class AiCompetition extends Component {
                             </div>
                             <div className="col-sm-2 col-md-2">
                                 <Button onClick={this.onIterateBtnClick}>{this.state.iterating ? 'End' : 'Start'}</Button>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-sm-4 col-md-4">
+                                <Table striped bordered condensed hover>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            {this.state.tabs.map(tab => <th>{tab.strategyName}</th>)}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {this.state.competitionResults.map((competitionRes, idx) => {
+                                            return (
+                                                <tr>
+                                                    <td>{competitionRes.iteration}</td>
+                                                    {competitionRes.scores.map(scoreRec => <td>{scoreRec.score}</td>)}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </Table>
+                            </div>
+                            <div className="col-sm-8 col-md-8">
+                                <ChartistGraph data={data} options={options} type={type} />
                             </div>
                         </div>
                     </Panel>

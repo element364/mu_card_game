@@ -82,6 +82,7 @@ const getCardsScore = selectedCards => {
 export { getCardsScore }
 
 const getNewGameState = (deck = generateDeck()) => {
+    deck = deck.concat();
     var cards = [];
     
     for (let i = 0; i < 5; i++) {
