@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import { actionTypes } from '../../../actions/actionTypes';
 import * as gameActions from '../../../actions/gameActions';
 import Card from '../../ui/card/Card.jsx';
-import { antiGreedStrategy } from '../../../utils/strategies';
+import { min5Strategy } from '../../../utils/strategies';
 
 var CodeMirror = require('codemirror/lib/codemirror');
 require('codemirror/lib/codemirror.css');
@@ -15,7 +15,7 @@ require('codemirror/mode/javascript/javascript');
 
 require('./ai-game.less');
 
-const defaultCode = antiGreedStrategy;
+const defaultCode = min5Strategy;
 
 class AiGame extends Component {
     constructor(props) {

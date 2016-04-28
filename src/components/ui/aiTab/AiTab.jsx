@@ -14,6 +14,7 @@ class AiTab extends Component {
         
         this.onCloseHandler = this.onCloseHandler.bind(this);
         this.handleStrategyNameChange = this.handleStrategyNameChange.bind(this);
+        this.handleStrategyColorChange = this.handleStrategyColorChange.bind(this);
     }
     
     componentDidMount() {
@@ -36,12 +37,19 @@ class AiTab extends Component {
         this.props.onStrategyNameChange(this.props.index, e.target.value);
     }
     
+    handleStrategyColorChange(e) {
+        this.props.onStrategyColorChange(this.props.index, e.target.value);
+    }
+    
     render() {
         return (
             <div className="container ai-tab">
                 <div className="row">
-                    <div className="col-sm-10 col-md-10">
+                    <div className="col-sm-5 col-md-5">
                         <Input type="text" onChange={this.handleStrategyNameChange} value={this.props.strategyName} />
+                    </div>
+                    <div className="col-sm-5 col-md-5">
+                        <Input type="text" onChange={this.handleStrategyColorChange} value={this.props.strategyColor} />
                     </div>
                     <div className="col-sm-2 col-md-2">
                         <Button onClick={this.onCloseHandler}>X</Button>
@@ -58,12 +66,14 @@ class AiTab extends Component {
 AiTab.propTypes = {
     onClose: PropTypes.func,
     onStrategyNameChange: PropTypes.func,
+    onStrategyColorChange: PropTypes.func,
     onCodeChange: PropTypes.func
 };
 
 AiTab.defaultProps = {
     onClose: () => {},
     onStrategyNameChange: () => {},
+    onStrategyColorChange: () => {},
     onCodeChange: () => {}
 };
 

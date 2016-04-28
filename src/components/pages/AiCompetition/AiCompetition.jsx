@@ -1,16 +1,14 @@
 import React, { Component } from 'react';
 import { Button, Tab, Tabs, Panel, Input, Table } from 'react-bootstrap';
 import { Link } from 'react-router';
-import ChartistGraph from 'react-chartist';
-import Tooltip from 'chartist-plugin-tooltip';
-import C3Chart from 'c3-react';
+
 import AiTab from '../../ui/aiTab/AiTab.jsx';
 import { generateDeck, cardGameReducer } from '../../../reducers/cardGameReducer';
 import { actionTypes } from '../../../actions/actionTypes';
-import { antiGreedStrategy } from '../../../utils/strategies';
+import { min5Strategy } from '../../../utils/strategies';
 
-require('chartist/dist/chartist.min.css');
-require('./chartist-tooltip.less');
+var rd3 = require('react-d3');
+var { LineChart } = rd3;
 
 class AiCompetition extends Component {
     constructor(props) {
@@ -20,7 +18,8 @@ class AiCompetition extends Component {
             {
                 index: 1,
                 strategyName: 'NoobStrategy',
-                code: antiGreedStrategy
+                strategyColor: 'green',
+                code: min5Strategy
             }
         ];
         
@@ -40,6 +39,7 @@ class AiCompetition extends Component {
         this.addBtnHandler = this.addBtnHandler.bind(this);
         this.onCloseTab = this.onCloseTab.bind(this);
         this.onStrategyNameChangeTab = this.onStrategyNameChangeTab.bind(this);
+        this.onStrategyColorChange = this.onStrategyColorChange.bind(this);
         this.handleIterationsChange = this.handleIterationsChange.bind(this);
         this.onIterateBtnClick = this.onIterateBtnClick.bind(this);
         this.onTabCodeChange = this.onTabCodeChange.bind(this);
@@ -54,6 +54,7 @@ class AiCompetition extends Component {
         const newTab = {
             index: ++this.tabs_counter,
             strategyName: 'Strategy',
+            strategyColor: 'red',
             code: ''
         };
         
@@ -74,6 +75,18 @@ class AiCompetition extends Component {
             tabs: this.state.tabs.map(tab => {
                 if (tab.index === index) {
                     return { ...tab, strategyName };
+                }
+                
+                return tab;
+            })
+        });
+    }
+    
+    onStrategyColorChange(index, strategyColor) {
+        this.setState({
+            tabs: this.state.tabs.map(tab => {
+                if (tab.index === index) {
+                    return { ...tab, strategyColor };
                 }
                 
                 return tab;
@@ -172,85 +185,24 @@ class AiCompetition extends Component {
     }
     
     render() {
-        let series = this.state.tabs.map(tab => []),
-            sums = this.state.tabs.map(tab => 0);
-
-        this.state.competitionResults.forEach(competitionRes => {
-            competitionRes.scores.forEach((scoreRec, idx) => {
-                sums[idx] += scoreRec.score
-                series[idx].push({
-                    meta: scoreRec.strategyName,
-                    value: sums[idx]
-                });
-            });
+        let sums = this.state.tabs.map(tab => 0);
+        
+        var lineData = this.state.tabs.map((tab, idx) => {
+            return {
+                name: tab.strategyName,
+                values: this.state.competitionResults.map(competitionRes => {
+                    sums[idx] += competitionRes.scores[idx].score;
+                    
+                    return {
+                        x: competitionRes.iteration,
+                        y: sums[idx] //competitionRes.scores[idx].score
+                    };
+                })
+            };
         });
         
-        var data = {
-            labels: this.state.competitionResults.map(competitionRes => competitionRes.iteration),
-            series
-        };
+        const colorFunc = idx => this.state.tabs[idx].strategyColor;
 
-        var options = {
-            fullWidth: true,
-            fullHeight: true,
-            //height: '300px',
-            //high: 10,
-            low: 0,
-            plugins: [
-                Tooltip()
-            ]
-        };
-        
-        let data2 = [
-  {
-    key: "dataSource1",
-    values: [
-      {label: "A", value: 3},
-      {label: "B", value: 4}
-    ]
-  },
-  {
-    key: "dataSource2",
-    values: [
-      {label: "X", value: 7},
-      {label: "Y", value: 8}
-    ]
-  }
-];
-
-let options2 = {
-  padding: {
-    top: 20,
-    bottom: 20,
-    left: 40,
-    right: 10
-  },
-  size: {
-    width: 800,
-    height: 600
-  },
-  subchart: true,
-  zoom: true,
-  grid: {
-    x: false,
-    y: true
-  },
-  labels: true,
-  axisLabel: {
-    x: "product",
-    y: "quantity"
-  },
-  onClick: function(d) {
-    let categories = this.categories(); //c3 function, get categorical labels
-    console.log(d);
-    console.log("you clicked {" + d.name + ": " + categories[d.x] + ": " + d.value + "}");
-  }
-};
-
-let type2 = "line";
-
-        var type = 'Line';
-        
         return (
             <div className="container-fluid">
                 <Link to="/">Main</Link>
@@ -261,7 +213,10 @@ let type2 = "line";
                 </div>
                 <div className="row">
                     <Tabs activeKey={this.state.selectedTabKey} onSelect={this.handleTabSelect} animation={false} id="noanim-tab-example">
-                        {this.state.tabs.map(tab => <Tab eventKey={tab.index} title={tab.strategyName}><AiTab strategyName={tab.strategyName} code={tab.code} index={tab.index} onStrategyNameChange={this.onStrategyNameChangeTab} onClose={this.onCloseTab} onCodeChange={this.onTabCodeChange} /></Tab>)}
+                        {this.state.tabs.map(tab => <Tab eventKey={tab.index} title={tab.strategyName}>
+                            <AiTab index={tab.index} code={tab.code} strategyName={tab.strategyName} strategyColor={tab.strategyColor}
+                                onStrategyNameChange={this.onStrategyNameChangeTab} onStrategyColorChange={this.onStrategyColorChange} onClose={this.onCloseTab} onCodeChange={this.onTabCodeChange} />
+                        </Tab>)}
                     </Tabs>
                 </div>
                 <div className="row">
@@ -296,8 +251,17 @@ let type2 = "line";
                                 </Table>
                             </div>
                             <div className="col-sm-8 col-md-8">
-                                {false && <ChartistGraph data={data} options={options} type={type} />}
-                                <C3Chart data={data2} type={type2} options={options2}/>
+                                {lineData.length > 0 && lineData[0].values.length > 0 &&
+                                <LineChart
+                                    legend={true}
+                                    width={1000}
+                                    height={500}
+                                    circleRadius={1}
+                                    data={lineData}
+                                    colors={colorFunc}
+                                    title="Compare"
+                                >
+                                </LineChart>}
                             </div>
                         </div>
                     </Panel>
