@@ -2,12 +2,15 @@ import React, { Component } from 'react';
 import { Button, Tab, Tabs, Panel, Input, Table } from 'react-bootstrap';
 import { Link } from 'react-router';
 import ChartistGraph from 'react-chartist';
+import Tooltip from 'chartist-plugin-tooltip';
+import C3Chart from 'c3-react';
 import AiTab from '../../ui/aiTab/AiTab.jsx';
 import { generateDeck, cardGameReducer } from '../../../reducers/cardGameReducer';
 import { actionTypes } from '../../../actions/actionTypes';
 import { antiGreedStrategy } from '../../../utils/strategies';
 
 require('chartist/dist/chartist.min.css');
+require('./chartist-tooltip.less');
 
 class AiCompetition extends Component {
     constructor(props) {
@@ -152,7 +155,7 @@ class AiCompetition extends Component {
     
     onIterateBtnClick() {
         var nextstate;
-        if (this.state.iterating) {
+        if (!this.state.iterating) {
             nextstate = {
                 competitionResults: []
             };
@@ -163,30 +166,90 @@ class AiCompetition extends Component {
             iterating: !this.state.iterating
         }, () => {
             if (this.state.iterating) {
-                    this.runIteration();
+                this.runIteration();
             }
         });
     }
     
     render() {
-var data = {
-labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'],
-series: [
-[1, 2, 4, 8, 6, -2, -1, -4, -6, -2]
-]
+        let series = this.state.tabs.map(tab => []),
+            sums = this.state.tabs.map(tab => 0);
+
+        this.state.competitionResults.forEach(competitionRes => {
+            competitionRes.scores.forEach((scoreRec, idx) => {
+                sums[idx] += scoreRec.score
+                series[idx].push({
+                    meta: scoreRec.strategyName,
+                    value: sums[idx]
+                });
+            });
+        });
+        
+        var data = {
+            labels: this.state.competitionResults.map(competitionRes => competitionRes.iteration),
+            series
+        };
+
+        var options = {
+            fullWidth: true,
+            fullHeight: true,
+            //height: '300px',
+            //high: 10,
+            low: 0,
+            plugins: [
+                Tooltip()
+            ]
+        };
+        
+        let data2 = [
+  {
+    key: "dataSource1",
+    values: [
+      {label: "A", value: 3},
+      {label: "B", value: 4}
+    ]
+  },
+  {
+    key: "dataSource2",
+    values: [
+      {label: "X", value: 7},
+      {label: "Y", value: 8}
+    ]
+  }
+];
+
+let options2 = {
+  padding: {
+    top: 20,
+    bottom: 20,
+    left: 40,
+    right: 10
+  },
+  size: {
+    width: 800,
+    height: 600
+  },
+  subchart: true,
+  zoom: true,
+  grid: {
+    x: false,
+    y: true
+  },
+  labels: true,
+  axisLabel: {
+    x: "product",
+    y: "quantity"
+  },
+  onClick: function(d) {
+    let categories = this.categories(); //c3 function, get categorical labels
+    console.log(d);
+    console.log("you clicked {" + d.name + ": " + categories[d.x] + ": " + d.value + "}");
+  }
 };
 
-var options = {
-high: 10,
-low: -10,
-axisX: {
-labelInterpolationFnc: function(value, index) {
-return index % 2 === 0 ? value : null;
-}
-}
-};
+let type2 = "line";
 
-var type = 'Bar'
+        var type = 'Line';
         
         return (
             <div className="container-fluid">
@@ -233,7 +296,8 @@ var type = 'Bar'
                                 </Table>
                             </div>
                             <div className="col-sm-8 col-md-8">
-                                <ChartistGraph data={data} options={options} type={type} />
+                                {false && <ChartistGraph data={data} options={options} type={type} />}
+                                <C3Chart data={data2} type={type2} options={options2}/>
                             </div>
                         </div>
                     </Panel>
