@@ -23,7 +23,7 @@ let config = Object.assign({}, baseConfig, {
     new BowerWebpackPlugin({
       searchResolveModulesDirectories: false
     }),
-    new NyanProgressPlugin() 
+    new NyanProgressPlugin()
   ],
   module: defaultSettings.getDefaultModules()
 });
